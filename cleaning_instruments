@@ -18,11 +18,66 @@ WITH raw_rwe360_treatment_instruments AS (
   WHERE rnk = 1  
 )
 
-SELECT
-  pubmed_id,
-  treatment_instrument,
-  search_term,
-  plain_english_term,
-  updated_at,
-  trigger_timestamp
-FROM de_duplicated_treatment_instruments
+, cleaned AS (
+  SELECT 
+    pubmed_id,
+    treatment_instrument,
+    search_term,
+    plain_english_term,
+    updated_at,
+    trigger_timestamp,
+    CASE
+      WHEN lower(treatment_instrument) LIKE "%eq%" THEN "eq-5d/eq-vas"
+      WHEN lower(treatment_instrument) LIKE "%vas%" THEN "eq-5d/eq-vas"
+      WHEN lower(treatment_instrument) LIKE "%5d%" THEN "eq-5d/eq-vas"
+      WHEN lower(treatment_instrument) LIKE "%eq-5d%" THEN "eq-5d/eq-vas"
+      WHEN lower(treatment_instrument) LIKE "%eq-vas%" THEN "eq-5d/eq-vas"
+      WHEN lower(treatment_instrument) LIKE "%eq-5d-%" THEN "eq-5d/eq-vas"
+      WHEN lower(treatment_instrument) LIKE "%phq-4%" THEN "patient health questionnaire(phq)"
+      WHEN lower(treatment_instrument) LIKE "%phq%" THEN "patient health questionnaire(phq)"
+      WHEN lower(treatment_instrument) LIKE "%patient health questionnaire%" THEN "patient health questionnaire(phq)"
+      WHEN lower(treatment_instrument) LIKE "%rankin%" THEN "rankin scale"
+      WHEN lower(treatment_instrument) LIKE "%mrs%" THEN "rankin scale"
+      WHEN lower(treatment_instrument) LIKE "%gad%" THEN "generalised anxiety disorder scale"     
+      WHEN lower(treatment_instrument) LIKE "%gad-%" THEN "generalised anxiety disorder scale"
+      WHEN lower(treatment_instrument) LIKE "%generalised anxiety%" THEN "generalised anxiety disorder scale"
+      WHEN lower(treatment_instrument) LIKE "%general anxiety%" THEN "generalised anxiety disorder scale"   
+      WHEN lower(treatment_instrument) LIKE "%depression anxiety stress%" THEN "depression, anxiety and stress scale(das)"    
+      WHEN lower(treatment_instrument) LIKE "%das%" THEN "depression, anxiety and stress scale(das)"    
+      WHEN lower(treatment_instrument) LIKE "%daas%" THEN "depression, anxiety and stress scale(das)"    
+      WHEN lower(treatment_instrument) LIKE "%das-%" THEN "depression, anxiety and stress scale(das)"     
+      WHEN lower(treatment_instrument) LIKE "%hads%" THEN "hospital anxiety and depression scale (hads)"
+      WHEN lower(treatment_instrument) LIKE "%hadss-%" THEN "hospital anxiety and depression scale (hads)"   
+      WHEN lower(treatment_instrument) LIKE "%hadss%" THEN "hospital anxiety and depression scale (hads)"   
+      WHEN lower(treatment_instrument) LIKE "%hospital anxiety%" THEN "hospital anxiety and depression scale (hads)"   
+      WHEN lower(treatment_instrument) LIKE "%sleep quality%" THEN "pittsburgh sleep quality index (psqi)"
+      WHEN lower(treatment_instrument) LIKE "%psqi%" THEN "pittsburgh sleep quality index (psqi)"
+      WHEN lower(treatment_instrument) LIKE "%pittsburgh sleep%" THEN "pittsburgh sleep quality index (psqi)"  
+      WHEN lower(treatment_instrument) LIKE "%ies-r%" THEN "impact of event scale-revised (ies-r)"
+      WHEN lower(treatment_instrument) LIKE "%iesr%" THEN "impact of event scale-revised (ies-r)"
+      WHEN lower(treatment_instrument) LIKE "%impact of event%" THEN "impact of event scale-revised (ies-r)"
+      WHEN lower(treatment_instrument) LIKE "%toolbox measures%" THEN "nih toolbox"
+      WHEN lower(treatment_instrument) LIKE "%nihtb%" THEN "nih toolbox"
+      WHEN lower(treatment_instrument) LIKE "%nih toolbox%" THEN "nih toolbox"
+      WHEN lower(treatment_instrument) LIKE "%nih-t%" THEN "nih toolbox"
+      WHEN lower(treatment_instrument) LIKE "%nihtb-%" THEN "nih toolbox"
+      WHEN lower(treatment_instrument) LIKE "%(nih) t%" THEN "nih toolbox"
+      WHEN lower(treatment_instrument) = "nih (national institutes of health) toolbox for the assessment of neurological and behavioral function full cognition battery" THEN "nih toolbox"  
+      WHEN lower(treatment_instrument) LIKE "%vineland%" THEN "vineland adaptive behaviour"
+      WHEN lower(treatment_instrument) LIKE "%abas%" THEN "vineland adaptive behaviour"
+      WHEN lower(treatment_instrument) LIKE "%abs%" THEN "vineland adaptive behaviour"
+      WHEN lower(treatment_instrument) LIKE "%vabs%" THEN "vineland adaptive behaviour"
+      WHEN lower(treatment_instrument) LIKE "%abc%" THEN "vineland adaptive behaviour"
+      WHEN lower(treatment_instrument) LIKE "%adaptive behavior%" THEN "vineland adaptive behaviour"
+      WHEN lower(treatment_instrument) LIKE "%perceived stress%" THEN "perceived stress (PSS)"
+      WHEN lower(treatment_instrument) LIKE "%pss%" THEN "perceived stress (PSS)"
+  ELSE lower(treatment_instrument)
+  END AS clean_treatment_instrument
+  FROM de_duplicated_treatment_instruments
+)
+
+
+SELECT distinct (clean_treatment_instrument), 
+count(pubmed_id)
+FROM cleaned
+group by 1
