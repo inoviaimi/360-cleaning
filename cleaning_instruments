@@ -1,0 +1,28 @@
+WITH raw_rwe360_treatment_instruments AS (
+
+  SELECT 
+    pubmed_id,
+    treatment_instrument,
+    search_term,
+    plain_english_term,
+    updated_at,
+    trigger_timestamp,
+    ROW_NUMBER() OVER( PARTITION BY pubmed_id, treatment_instrument, search_term, plain_english_term)  AS rnk
+    FROM `inovia-production.dbt_dev_antonio.stg_rwe_360_treatment_instruments`
+)
+
+, de_duplicated_treatment_instruments AS (
+  SELECT 
+    * 
+  FROM raw_rwe360_treatment_instruments
+  WHERE rnk = 1  
+)
+
+SELECT
+  pubmed_id,
+  treatment_instrument,
+  search_term,
+  plain_english_term,
+  updated_at,
+  trigger_timestamp
+FROM de_duplicated_treatment_instruments
